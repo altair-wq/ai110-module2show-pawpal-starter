@@ -338,3 +338,4 @@ class Scheduler:
         if context and context.get("plan_date"):
             parts.append(f"for {context.get('plan_date')}")
         return "Selected (" + "; ".join(parts) + ")"
+        

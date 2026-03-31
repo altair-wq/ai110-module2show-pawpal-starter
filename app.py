@@ -6,7 +6,6 @@ from pawpal_system import Owner, Pet, Task, Scheduler
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
-# Step 2: keep app memory in session_state
 if "owner" not in st.session_state:
     st.session_state["owner"] = Owner(
         id=1,
@@ -35,36 +34,14 @@ owner: Owner = st.session_state["owner"]
 scheduler: Scheduler = st.session_state["scheduler"]
 
 st.title("🐾 PawPal+")
+st.markdown("Plan pet care tasks with scheduling, recurrence, filtering, and conflict warnings.")
 
-st.markdown(
-    """
-Welcome to the PawPal+ starter app.
-
-This file is intentionally thin. It gives you a working Streamlit app so you can start quickly,
-but **it does not implement the project logic**. Your job is to design the system and build it.
-
-Use this app as your interactive demo once your backend classes/functions exist.
-"""
-)
-
-with st.expander("Scenario", expanded=True):
+with st.expander("Scenario", expanded=False):
     st.markdown(
         """
-**PawPal+** is a pet care planning assistant. It helps a pet owner plan care tasks
-for their pet(s) based on constraints like time, priority, and preferences.
-
-You will design and implement the scheduling logic and connect it to this Streamlit UI.
-"""
-    )
-
-with st.expander("What you need to build", expanded=True):
-    st.markdown(
-        """
-At minimum, your system should:
-- Represent pet care tasks (what needs to happen, how long it takes, priority)
-- Represent the pet and the owner (basic info and preferences)
-- Build a plan/schedule for a day that chooses and orders tasks based on constraints
-- Explain the plan (why each task was chosen and when it happens)
+**PawPal+** helps a pet owner manage care tasks such as feeding, walks, medication,
+and grooming. It uses task priority, due times, recurrence, and available time slots
+to build a daily plan.
 """
     )
 
@@ -77,9 +54,7 @@ if owner_name != owner.name:
 
 st.divider()
 
-# Step 3: Add Pet wired to Owner.add_pet()
 st.subheader("Add a Pet")
-
 with st.form("add_pet_form"):
     pet_name = st.text_input("Pet name", value="Mochi")
     species = st.selectbox("Species", ["dog", "cat", "other"])
@@ -108,9 +83,7 @@ else:
 
 st.divider()
 
-# Step 3: Add Task wired to Pet.add_task()
 st.subheader("Add a Task")
-
 if not owner.pets:
     st.info("Add a pet first before assigning tasks.")
 else:
@@ -131,7 +104,7 @@ else:
             due_time = st.time_input("Due time", value=dtime(9, 0))
             due_dt = datetime.combine(due_date, due_time)
 
-        recurrence_label = st.selectbox("Recurrence", ["none", "daily"], index=0)
+        recurrence_label = st.selectbox("Recurrence", ["none", "daily", "weekly"], index=0)
         task_submitted = st.form_submit_button("Add Task")
 
         if task_submitted:
@@ -139,6 +112,8 @@ else:
             recurrence = None
             if recurrence_label == "daily":
                 recurrence = {"freq": "daily", "interval": 1}
+            elif recurrence_label == "weekly":
+                recurrence = {"freq": "weekly", "interval": 1}
 
             new_task = Task(
                 id=st.session_state["next_task_id"],
@@ -169,7 +144,7 @@ if has_tasks:
                         "category": task.category,
                         "duration": task.duration_minutes,
                         "priority": task.priority,
-                        "due": task.due_time.isoformat() if task.due_time else "",
+                        "due": task.due_time.strftime("%Y-%m-%d %H:%M") if task.due_time else "",
                         "recurrence": task.recurrence if task.recurrence else "",
                         "completed": task.completed,
                     }
@@ -182,35 +157,47 @@ else:
 
 st.divider()
 
-# Step 3: Generate schedule wired to Scheduler.generate_daily_plan()
 st.subheader("Build Schedule")
 plan_date = st.date_input("Plan date", value=date.today())
 
-if st.button("Generate schedule"):
+if st.button("Generate Schedule"):
     plan = scheduler.generate_daily_plan(owner, plan_date)
-
-    st.subheader("Schedule")
-
     scheduled = plan.get("scheduled", [])
     unscheduled = plan.get("unscheduled", [])
+
+    all_tasks = []
+    for pet in owner.pets:
+        all_tasks.extend(pet.tasks)
+
+    conflicts = scheduler.detect_due_time_conflicts(all_tasks, owner)
+
+    st.subheader("📅 Schedule Results")
 
     if scheduled:
         display_rows = []
         for item in scheduled:
             display_rows.append(
                 {
-                    "pet": item.get("pet_name"),
-                    "task": item.get("task_title"),
-                    "start": item.get("start").strftime("%H:%M") if item.get("start") else "",
-                    "end": item.get("end").strftime("%H:%M") if item.get("end") else "",
-                    "reason": item.get("reason"),
+                    "Pet": item.get("pet_name"),
+                    "Task": item.get("task_title"),
+                    "Start": item.get("start").strftime("%H:%M") if item.get("start") else "",
+                    "End": item.get("end").strftime("%H:%M") if item.get("end") else "",
+                    "Reason": item.get("reason"),
                 }
             )
+        st.success("Schedule generated successfully.")
         st.table(display_rows)
     else:
-        st.info("No tasks were scheduled for this date.")
+        st.warning("No tasks could be scheduled for this date.")
 
     if unscheduled:
-        st.warning(f"Unscheduled task ids: {unscheduled}")
+        st.warning("Some tasks could not be scheduled.")
+        for task_id in unscheduled:
+            st.write(f"- Unscheduled task ID: {task_id}")
+
+    if conflicts:
+        st.error("Conflict warnings:")
+        for warning in conflicts:
+            st.write(f"- {warning}")
     else:
-        st.write("All candidate tasks were scheduled or there were no candidate tasks.")
+        st.info("No conflict warnings detected.")
