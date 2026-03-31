@@ -1,11 +1,16 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
-
+1. User enters owner + pet info.
+2. User adds tasks (duration, priority).
+3. User generates a daily plan with explanation.
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+I designed PawPal+ using four classes: Owner, Pet, Task, and Scheduler. Owner stores user info, time, and preferences; pet stores animal info and its tasks; task represents activities like feeding or walking with duration and priority. Scheduler generates a daily plan by organizing tasks based on constraints. This keeps the system modular and easy to test.
+
 - What classes did you include, and what responsibilities did you assign to each?
+I kept Scheduler separate to handle all planning logic instead of mixing it into Owner or Pet. This improves modularity and makes testing easier. I also used dataclasses for cleaner code.
 
 **b. Design changes**
 
