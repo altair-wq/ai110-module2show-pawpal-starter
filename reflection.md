@@ -1,21 +1,25 @@
 # PawPal+ Project Reflection
 
 ## 1. System Design
+**Core user actions**
 1. User enters owner + pet info.
 2. User adds tasks (duration, priority).
 3. User generates a daily plan with explanation.
 **a. Initial design**
 
 - Briefly describe your initial UML design.
-I designed PawPal+ using four classes: Owner, Pet, Task, and Scheduler. Owner stores user info, time, and preferences; pet stores animal info and its tasks; task represents activities like feeding or walking with duration and priority. Scheduler generates a daily plan by organizing tasks based on constraints. This keeps the system modular and easy to test.
+My initial design had four classes: Owner, Pet, Task, and Scheduler. Owner stores the pet owner’s information, availability, preferences, and list of pets. Pet stores the animal’s basic information and its care tasks. Task represents individual care activities like feeding, walking, medication, or grooming, and includes attributes such as duration, priority, due time, and recurrence. Scheduler is responsible for sorting tasks, applying constraints, generating a daily plan, and explaining why tasks were selected.
 
 - What classes did you include, and what responsibilities did you assign to each?
-I kept Scheduler separate to handle all planning logic instead of mixing it into Owner or Pet. This improves modularity and makes testing easier. I also used dataclasses for cleaner code.
+I included four main classes: Owner, Pet, Task, and Scheduler. Owner is responsible for storing the user’s information, availability, preferences, and list of pets. Pet is responsible for storing details about each animal and managing its tasks. Task represents individual care activities and stores attributes like duration, priority, due time, and recurrence. Scheduler is responsible for the planning logic, including sorting tasks, applying constraints, generating a daily plan, and explaining why certain tasks were selected.
 
 **b. Design changes**
 
 - Did your design change during implementation?
+Yes, but only slightly. I kept the same four main classes because the overall structure already matched the problem well.
+
 - If yes, describe at least one change and why you made it.
+One important refinement was keeping Scheduler responsible for the planning logic instead of moving scheduling behavior into Owner or Pet. This made the system more modular and easier to test. I also decided not to adopt more advanced suggestions like caching or extra relationship classes, because they would add unnecessary complexity for this version of the project.
 
 ---
 
